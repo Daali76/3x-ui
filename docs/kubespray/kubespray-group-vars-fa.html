@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>راهنمای کامل آموزشی group_vars در Kubespray</title>
+<style>
+
+:root {
+  --bg: #0f1419;
+  --bg-elevated: #1a2332;
+  --bg-card: #1e2a3a;
+  --bg-code: #0d1117;
+  --border: #2d3a4d;
+  --text: #e6edf3;
+  --text-muted: #8b9cb3;
+  --accent: #3d9cf0;
+  --accent-soft: rgba(61, 156, 240, 0.15);
+  --success: #3fb950;
+  --warning: #d29922;
+  --danger: #f85149;
+  --tag-all: #58a6ff;
+  --tag-k8s: #a371f7;
+  --tag-cni: #3fb950;
+  --tag-cloud: #f0883e;
+  --radius: 10px;
+  --font: "Segoe UI", "Tahoma", "Noto Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  --sidebar-w: 280px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: linear-gradient(160deg, #0b1220 0%, #121a28 40%, #0f1620 100%);
+  color: var(--text);
+  line-height: 1.65;
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  position: sticky; top: 0; height: 100vh; width: var(--sidebar-w);
+  background: rgba(15, 20, 25, 0.95); border-inline-end: 1px solid var(--border);
+  overflow-y: auto; padding: 1.25rem 1rem; flex-shrink: 0; backdrop-filter: blur(8px);
+}
+.sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin: 1.25rem 0 0.5rem; padding-inline-start: 0.5rem; }
+.sidebar h2:first-child { margin-top: 0.25rem; }
+.sidebar a {
+  display: block; padding: 0.35rem 0.6rem; border-radius: 6px; color: var(--text);
+  font-size: 0.88rem; text-decoration: none; margin-bottom: 2px;
+}
+.sidebar a:hover, .sidebar a.active { background: var(--accent-soft); color: var(--accent); text-decoration: none; }
+.brand {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem;
+  margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+}
+.brand-mark {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: linear-gradient(135deg, #326ce5, #3d9cf0);
+  display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; color: white;
+}
+.brand strong { display: block; font-size: 0.95rem; }
+.brand span { font-size: 0.75rem; color: var(--text-muted); }
+.main { flex: 1; max-width: 960px; padding: 2rem 2.5rem 4rem; }
+.hero {
+  background: linear-gradient(135deg, rgba(50,108,229,0.2), rgba(61,156,240,0.08));
+  border: 1px solid var(--border); border-radius: 16px; padding: 2rem 2.25rem;
+  margin-bottom: 2.5rem; position: relative; overflow: hidden;
+}
+.hero::after {
+  content: ""; position: absolute; inset: auto -20% -40% auto; width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(61,156,240,0.25), transparent 70%);
+  pointer-events: none;
+}
+.hero h1 { font-size: 1.85rem; margin-bottom: 0.6rem; line-height: 1.3; }
+.hero p { color: var(--text-muted); max-width: 62ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.1rem; }
+.badge {
+  font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 999px;
+  background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-muted);
+}
+section {
+  margin-bottom: 2.75rem; scroll-margin-top: 1.5rem;
+}
+section > h2 {
+  font-size: 1.45rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.6rem;
+}
+section > h3 { font-size: 1.1rem; margin: 1.4rem 0 0.55rem; color: #c9d7e8; }
+section > h4 { font-size: 0.98rem; margin: 1.1rem 0 0.4rem; color: var(--accent); }
+p { margin-bottom: 0.85rem; color: #c8d4e3; }
+ul, ol { margin: 0 0 1rem 1.25rem; color: #c8d4e3; }
+li { margin-bottom: 0.35rem; }
+.file-path {
+  display: inline-block; font-family: var(--mono); font-size: 0.82rem;
+  background: var(--bg-code); border: 1px solid var(--border); padding: 0.2rem 0.55rem;
+  border-radius: 6px; color: #7ee787; margin-bottom: 0.75rem;
+}
+.tag {
+  font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem; border-radius: 4px; color: #0d1117;
+}
+.tag.all { background: var(--tag-all); }
+.tag.k8s { background: var(--tag-k8s); color: white; }
+.tag.cni { background: var(--tag-cni); }
+.tag.cloud { background: var(--tag-cloud); }
+.tag.cp { background: #f778ba; }
+.callout {
+  border-inline-start: 3px solid var(--accent); background: var(--accent-soft);
+  padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+}
+.callout.warn { border-color: var(--warning); background: rgba(210,153,34,0.12); }
+.callout.ok { border-color: var(--success); background: rgba(63,185,80,0.12); }
+.callout strong { color: var(--text); }
+table {
+  width: 100%; border-collapse: collapse; margin: 0.85rem 0 1.25rem;
+  font-size: 0.9rem; background: var(--bg-elevated); border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--border);
+}
+th, td { padding: 0.65rem 0.8rem; text-align: start; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: #243044; color: #9ecbff; font-weight: 600; font-size: 0.8rem; }
+td code, p code, li code {
+  font-family: var(--mono); font-size: 0.82em; background: var(--bg-code);
+  padding: 0.1rem 0.35rem; border-radius: 4px; color: #ff7b72;
+}
+pre {
+  background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1rem 1.1rem; overflow-x: auto; margin: 0.85rem 0 1.2rem; font-family: var(--mono);
+  font-size: 0.82rem; line-height: 1.55; color: #d0d7de;
+}
+.tree {
+  font-family: var(--mono); font-size: 0.82rem; background: var(--bg-code);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem;
+  white-space: pre; overflow-x: auto; color: #7ee787; margin: 1rem 0;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+.card h4 { margin: 0 0 0.4rem; color: var(--text); }
+.card p { margin: 0; font-size: 0.9rem; }
+.toc-mobile { display: none; }
+.lang-switch {
+  margin-top: 0.75rem; font-size: 0.8rem;
+}
+.lang-switch a {
+  display: inline-block; padding: 0.35rem 0.7rem; border: 1px solid var(--border);
+  border-radius: 6px; margin-top: 0.35rem;
+}
+footer {
+  margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  color: var(--text-muted); font-size: 0.85rem;
+}
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar { position: relative; height: auto; width: 100%; max-height: 280px; }
+  .main { padding: 1.25rem 1rem 3rem; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.4rem; }
+}
+[dir="rtl"] .callout { border-radius: 8px 0 0 8px; }
+[dir="rtl"] .sidebar { border-inline-end: none; border-inline-start: 1px solid var(--border); }
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">KS</div>
+    <div>
+      <strong>Kubespray</strong>
+      <span>راهنمای کامل group_vars</span>
+    </div>
+  </div>
+  <div class="lang-switch"><a href="kubespray-group-vars-en.html">English version</a></div>
+  
+<h2>مفاهیم پایه</h2>
+<a href="#intro">مقدمه</a>
+<a href="#architecture">معماری Inventory</a>
+<a href="#precedence">اولویت متغیرها</a>
+<a href="#structure">ساختار پوشه</a>
+<h2>group_vars/all</h2>
+<a href="#all-yml">all.yml</a>
+<a href="#containerd">containerd.yml</a>
+<a href="#docker">docker.yml</a>
+<a href="#crio">cri-o.yml</a>
+<a href="#etcd">etcd.yml</a>
+<a href="#offline">offline.yml</a>
+<a href="#coreos">coreos.yml</a>
+<a href="#cloud-providers">Cloud Providerها</a>
+<h2>group_vars/k8s_cluster</h2>
+<a href="#k8s-cluster">k8s-cluster.yml</a>
+<a href="#addons">addons.yml</a>
+<a href="#cni-overview">نمای کلی CNI</a>
+<a href="#calico">Calico</a>
+<a href="#cilium">Cilium</a>
+<a href="#flannel">Flannel</a>
+<a href="#kube-ovn">Kube-OVN</a>
+<a href="#kube-router">Kube-Router</a>
+<a href="#macvlan">Macvlan</a>
+<a href="#custom-cni">Custom CNI</a>
+<h2>سایر</h2>
+<a href="#kube-control-plane">kube_control_plane.yml</a>
+<a href="#workflow">روند پیشنهادی</a>
+<a href="#cheatsheet">چیت‌شیت</a>
+
+</aside>
+<main class="main">
+  <header class="hero">
+    <h1>راهنمای کامل آموزشی group_vars در Kubespray</h1>
+    <p>مرور ماژول‌به‌ماژول تمام فایل‌های inventory/sample/group_vars: کنترل چه چیزی، متغیرهای کلیدی، پیش‌فرض‌ها، و زمان تغییر برای کلاسترهای production.</p>
+    <div class="meta"><span class="badge">Kubespray</span><span class="badge">Ansible group_vars</span><span class="badge">آموزشی</span><span class="badge">FA</span></div>
+  </header>
+  
+<section id="intro">
+  <h2>۱. مقدمه</h2>
+  <p><strong>Kubespray</strong> ابزاری مبتنی بر Ansible برای نصب Kubernetes سطح production است. تقریباً تمام رفتار کلاستر با متغیرهای Ansible کنترل می‌شود و محل اصلی تنظیم آن‌ها <code>inventory/&lt;cluster&gt;/group_vars/</code> است.</p>
+  <p>این راهنما <em>تمام</em> فایل‌های نمونه <code>group_vars</code> رسمی Kubespray (<code>inventory/sample/group_vars</code>) را بخش‌به‌بخش توضیح می‌دهد: هدف هر فایل، متغیرهای مهم، مقدار پیش‌فرض، و زمان تغییر آن‌ها.</p>
+  <div class="callout">
+    <strong>هدف یادگیری:</strong> بعد از این سند باید بتوانید هر فایل زیر <code>group_vars</code> را باز کنید، بفهمید روی کدام hostها اثر دارد، و تنظیمات شبکه، runtime، cloud، نصب آفلاین و add-on را درست انتخاب کنید.
+  </div>
+</section>
+
+<section id="architecture">
+  <h2>۲. معماری Inventory</h2>
+  <p>گروه‌های اصلی inventory در Kubespray:</p>
+  <table>
+    <tr><th>گروه</th><th>نقش</th><th>توضیح</th></tr>
+    <tr><td><code>kube_control_plane</code></td><td>API server، scheduler، controller-manager</td><td>اگر schedulable باشد در <code>kube_node</code> هم می‌آید</td></tr>
+    <tr><td><code>kube_node</code></td><td>Workerها (اجرای Pod)</td><td>می‌تواند با control plane هم‌پوشانی داشته باشد</td></tr>
+    <tr><td><code>etcd</code></td><td>اعضای etcd</td><td>تعداد فرد (۳ یا ۵) توصیه می‌شود</td></tr>
+    <tr><td><code>calico_rr</code></td><td>Route Reflectorهای Calico</td><td>سناریوهای پیشرفته BGP</td></tr>
+    <tr><td><code>bastion</code></td><td>Jump host برای SSH</td><td>وقتی نودها مستقیم در دسترس نیستند</td></tr>
+    <tr><td><code>k8s_cluster</code></td><td>اتحاد پویا</td><td><code>kube_node ∪ kube_control_plane ∪ calico_rr</code></td></tr>
+  </table>
+  <div class="callout ok">
+    <strong>قانون کلیدی:</strong> متغیرهای <code>group_vars/all/</code> روی <em>همه</em> hostهای inventory اعمال می‌شوند (حتی etcd جدا). متغیرهای <code>group_vars/k8s_cluster/</code> فقط روی نودهای Kubernetes اثر دارند — نه روی etcdهایی که خارج از <code>k8s_cluster</code> هستند.
+  </div>
+</section>
+
+<section id="precedence">
+  <h2>۳. اولویت متغیرها (Precedence)</h2>
+  <p>Kubespray عمدتاً از inventory <code>group_vars</code> برای سفارشی‌سازی استفاده می‌کند. اولویت ساده‌شده (بالاتر برنده است):</p>
+  <ol>
+    <li>Extra vars (<code>ansible-playbook -e</code> / <code>-e @file.yml</code>)</li>
+    <li>Inventory host_vars</li>
+    <li>Inventory group_vars (رایج‌ترین محل ویرایش)</li>
+    <li>پیش‌فرض‌های داخل roleهای Kubespray</li>
+  </ol>
+  <div class="callout warn">
+    <strong>هشدار:</strong> Override کردن متغیرهای داخلی role با <code>-e</code> ممکن است در آپگرید بشکند. ترجیحاً فقط متغیرهای مستند inventory را تغییر دهید.
+  </div>
+</section>
+
+<section id="structure">
+  <h2>۴. ساختار پوشه</h2>
+  <div class="tree">inventory/sample/group_vars/
+├── all/
+│   ├── all.yml              # سراسری: LB، DNS، proxy، NTP، cloud_provider
+│   ├── containerd.yml       # runtime مربوط به containerd
+│   ├── docker.yml           # Docker (قدیمی)
+│   ├── cri-o.yml            # CRI-O
+│   ├── etcd.yml             # مسیر داده و نوع استقرار etcd
+│   ├── offline.yml          # آینه و URLهای نصب آفلاین
+│   ├── coreos.yml           # auto-upgrade در Flatcar/CoreOS
+│   ├── aws.yml / azure.yml / gcp.yml / ...
+│   └── ...
+├── k8s_cluster/
+│   ├── k8s-cluster.yml      # هسته تنظیمات Kubernetes
+│   ├── addons.yml           # Helm، MetalLB، cert-manager، ...
+│   └── k8s-net-*.yml        # تنظیمات هر CNI
+└── kube_control_plane.yml   # رزرو منابع control plane</div>
+</section>
+
+<section id="all-yml">
+  <h2><span class="tag all">all</span> all.yml — تنظیمات سراسری</h2>
+  <div class="file-path">group_vars/all/all.yml</div>
+  <p>روی همه hostها اعمال می‌شود: مسیر باینری، Load Balancing برای API، DNS، پروکسی، گواهی، NTP و انتخاب cloud provider.</p>
+
+  <h3>۴.۱ مسیرها و دسترسی</h3>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>bin_dir</code></td><td><code>/usr/local/bin</code></td><td>محل نصب kubelet، kubectl، etcdctl و …</td></tr>
+    <tr><td><code>access_ip</code></td><td>(خالی)</td><td>IPای که بقیه نودها برای رسیدن به این host استفاده می‌کنند؛ در AWS/GCP با IP عمومی/خصوصی حیاتی است (معمولاً per-host)</td></tr>
+    <tr><td><code>ping_access_ip</code></td><td><code>true</code></td><td>چک ICMP؛ اگر فایروال ping را می‌بندد <code>false</code> کنید</td></tr>
+  </table>
+
+  <h3>۴.۲ Load Balancing برای API Server</h3>
+  <p>برای HA باید endpoint پایدار داشته باشید: LB خارجی یا پروکسی localhost روی هر نود.</p>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>loadbalancer_apiserver</code></td><td>(کامنت)</td><td>آدرس/پورت LB خارجی مثل ELB</td></tr>
+    <tr><td><code>apiserver_loadbalancer_domain_name</code></td><td>(کامنت)</td><td>نام DNS برای LB</td></tr>
+    <tr><td><code>loadbalancer_apiserver_localhost</code></td><td>(فعال در roleها)</td><td>nginx/haproxy محلی روی هر نود</td></tr>
+    <tr><td><code>loadbalancer_apiserver_type</code></td><td><code>nginx</code></td><td><code>nginx</code> یا <code>haproxy</code></td></tr>
+    <tr><td><code>loadbalancer_apiserver_port</code></td><td><code>6443</code></td><td>پورت LB محلی (معمولاً ۶۴۴۳ بماند)</td></tr>
+    <tr><td><code>loadbalancer_apiserver_healthcheck_port</code></td><td><code>8081</code></td><td>پورت health-check پروکسی</td></tr>
+  </table>
+<pre># مثال LB خارجی
+apiserver_loadbalancer_domain_name: "k8s-api.example.com"
+loadbalancer_apiserver:
+  address: 203.0.113.10
+  port: 6443</pre>
+
+  <h3>۴.۳ DNS</h3>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>upstream_dns_servers</code></td><td>DNS بالادستی برای CoreDNS / resolv میزبان</td></tr>
+    <tr><td><code>disable_host_nameservers</code></td><td>اگر true باشد nameserverهای خود host در مرحله late تزریق نمی‌شوند — باید خودتان DNS تعریف کنید</td></tr>
+  </table>
+
+  <h3>۴.۴ Cloud Provider</h3>
+  <p>از Kubernetes v1.31 به بعد فقط external CCM:</p>
+<pre>cloud_provider: external
+external_cloud_provider: openstack   # vsphere, oci, huaweicloud, hcloud, manual</pre>
+  <p>سپس فایل YAML ابری متناظر را پر کنید. مقدار <code>manual</code> یعنی CCM را خودتان نصب می‌کنید.</p>
+
+  <h3>۴.۵ پروکسی HTTP(S)</h3>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>http_proxy</code> / <code>https_proxy</code></td><td>پروکسی برای package manager و container engine</td></tr>
+    <tr><td><code>https_proxy_cert_file</code></td><td>CA سفارشی برای پروکسی‌های TLS-intercept</td></tr>
+    <tr><td><code>no_proxy</code> / <code>additional_no_proxy</code></td><td>لیست استثنا از پروکسی</td></tr>
+    <tr><td><code>no_proxy_exclude_workers</code></td><td>فقط CP در no_proxy — جلوگیری از ری‌استارت همه workerها هنگام scale</td></tr>
+    <tr><td><code>skip_http_proxy_on_os_packages</code></td><td>پروکسی را در yum/apt ست نکن</td></tr>
+    <tr><td><code>download_validate_certs</code></td><td>فقط اگر پروکسی TLS را خراب می‌کند false کنید (checksum همچنان چک می‌شود)</td></tr>
+  </table>
+
+  <h3>۴.۶ گواهی، ایمنی، دانلود</h3>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>cert_management</code></td><td><code>script</code></td><td><code>script</code> = تولید توسط Kubespray؛ <code>none</code> = شما گواهی می‌دهید</td></tr>
+    <tr><td><code>ignore_assert_errors</code></td><td><code>false</code></td><td>ادامه با وجود شکست pre-check (خطرناک)</td></tr>
+    <tr><td><code>deploy_container_engine</code></td><td><code>true</code></td><td>اگر CRI از قبل نصب است false کنید</td></tr>
+    <tr><td><code>unsafe_show_logs</code></td><td><code>false</code></td><td>خاموش کردن <code>no_log</code> — ممکن است secret لو برود</td></tr>
+    <tr><td><code>allow_unsupported_distribution_setup</code></td><td><code>false</code></td><td>اجبار نصب روی OS پشتیبانی‌نشده</td></tr>
+  </table>
+
+  <h3>۴.۷ اشتراک RHEL، sysctl، webhook، NTP</h3>
+  <ul>
+    <li><code>rh_subscription_*</code> — ثبت سیستم‌های RHEL هنگام دیپلوی</li>
+    <li><code>sysctl_file_path</code> / <code>sysctl_ignore_unknown_keys</code> — محل فایل تنظیمات کرنل</li>
+    <li><code>kube_webhook_token_auth</code> + URL/CA — احراز هویت webhook</li>
+    <li><code>ntp_enabled</code>، <code>ntp_servers</code> — همگام‌سازی زمان (برای گواهی و etcd بسیار مهم)</li>
+  </ul>
+</section>
+
+<section id="containerd">
+  <h2><span class="tag all">all</span> containerd.yml — Runtime پیش‌فرض</h2>
+  <div class="file-path">group_vars/all/containerd.yml</div>
+  <p>پیش‌فرض <code>container_manager: containerd</code> است. این فایل خود containerd را تنظیم می‌کند.</p>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>containerd_storage_dir</code></td><td>ریشه ذخیره image/container</td></tr>
+    <tr><td><code>containerd_default_runtime</code></td><td>معمولاً <code>runc</code></td></tr>
+    <tr><td><code>containerd_snapshotter</code></td><td>مثلاً <code>overlayfs</code></td></tr>
+    <tr><td><code>containerd_additional_runtimes</code></td><td>runtimeهای اضافه مثل Kata</td></tr>
+    <tr><td><code>containerd_registries_mirrors</code></td><td>mirror رجیستری با قابلیت‌ها و هدر auth</td></tr>
+    <tr><td><code>containerd_registry_auth</code></td><td>یوزر/پسورد رجیستری خصوصی</td></tr>
+    <tr><td><code>containerd_debug_level</code></td><td>سطح لاگ</td></tr>
+    <tr><td><code>containerd_metrics_address</code></td><td>آدرس متریک Prometheus</td></tr>
+  </table>
+<pre>containerd_registries_mirrors:
+  - prefix: docker.io
+    mirrors:
+      - host: https://mirror.example.com
+        capabilities: ["pull", "resolve"]
+        skip_verify: false</pre>
+</section>
+
+<section id="docker">
+  <h2><span class="tag all">all</span> docker.yml</h2>
+  <div class="file-path">group_vars/all/docker.yml</div>
+  <p>فقط وقتی <code>container_manager: docker</code> باشد معنا دارد. دیگر پیش‌فرض نیست؛ containerd ترجیح داده می‌شود.</p>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>docker_storage_options</code></td><td>—</td><td>اجبار overlay2</td></tr>
+    <tr><td><code>docker_cgroup_driver</code></td><td><code>systemd</code></td><td>باید با kubelet یکی باشد</td></tr>
+    <tr><td><code>docker_daemon_graph</code></td><td><code>/var/lib/docker</code></td><td>ریشه داده</td></tr>
+    <tr><td><code>docker_log_opts</code></td><td>۵۰m × ۵ فایل</td><td>چرخش لاگ</td></tr>
+    <tr><td><code>docker_insecure_registries</code></td><td>—</td><td>رجیستری HTTP / self-signed</td></tr>
+    <tr><td><code>docker_registry_mirrors</code></td><td>—</td><td>mirror برای pull</td></tr>
+    <tr><td><code>docker_options</code></td><td>—</td><td>فلگ‌های خام اضافه برای dockerd</td></tr>
+  </table>
+</section>
+
+<section id="crio">
+  <h2><span class="tag all">all</span> cri-o.yml</h2>
+  <div class="file-path">group_vars/all/cri-o.yml</div>
+  <p>برای <code>container_manager: crio</code>.</p>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>crio_insecure_registries</code></td><td>رجیستری‌های بدون verify TLS</td></tr>
+    <tr><td><code>crio_registry_auth</code></td><td>لیست registry/user/password</td></tr>
+  </table>
+</section>
+
+<section id="etcd">
+  <h2><span class="tag all">all</span> etcd.yml</h2>
+  <div class="file-path">group_vars/all/etcd.yml</div>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>etcd_data_dir</code></td><td><code>/var/lib/etcd</code></td><td>داده پایدار — روی دیسک سریع بگذارید</td></tr>
+    <tr><td><code>container_manager</code></td><td>(ارث‌بری)</td><td>می‌توان فقط برای etcd CRI جدا تعریف کرد</td></tr>
+    <tr><td><code>etcd_deployment_type</code></td><td><code>host</code></td><td><code>host</code> = باینری روی سیستم؛ <code>docker</code> اگر Docker؛ <code>kubeadm</code> آزمایشی</td></tr>
+  </table>
+  <div class="callout warn">
+    <strong>نکته:</strong> در production دیسک اختصاصی و تعداد فرد عضو، به‌علاوه بکاپ منظم از <code>etcd_data_dir</code> توصیه می‌شود.
+  </div>
+</section>
+
+<section id="offline">
+  <h2><span class="tag all">all</span> offline.yml — نصب بدون اینترنت</h2>
+  <div class="file-path">group_vars/all/offline.yml</div>
+  <p>همه دانلودها (image، باینری، پکیج OS) را به mirror خصوصی هدایت می‌کند.</p>
+  <h3>آینه‌های سراسری</h3>
+  <table>
+    <tr><th>متغیر</th><th>کاربرد</th></tr>
+    <tr><td><code>registry_host</code></td><td>هاست رجیستری خصوصی</td></tr>
+    <tr><td><code>files_repo</code></td><td>سرور HTTP برای باینری‌ها</td></tr>
+    <tr><td><code>yum_repo</code> / <code>debian_repo</code> / <code>ubuntu_repo</code></td><td>mirror پکیج OS</td></tr>
+    <tr><td><code>kube_image_repo</code> و سایر <code>*_image_repo</code></td><td>Override رجیستری هر اکوسیستم</td></tr>
+  </table>
+  <h3>Override URL باینری‌ها</h3>
+  <p>یا کل دامنه (<code>github_url</code>، <code>dl_k8s_io_url</code>، …) یا تک‌تک artifactها:</p>
+  <ul>
+    <li><code>kubeadm_download_url</code>، <code>kubectl_download_url</code>، <code>kubelet_download_url</code></li>
+    <li><code>cni_download_url</code>، <code>crictl_download_url</code>، <code>etcd_download_url</code></li>
+    <li>ابزار CNI: <code>calicoctl_download_url</code>، <code>ciliumcli_download_url</code></li>
+    <li>Runtime: <code>containerd_download_url</code>، <code>runc_download_url</code>، <code>crio_download_url</code></li>
+  </ul>
+<pre>registry_host: "registry.corp.local"
+files_repo: "https://files.corp.local"
+kube_image_repo: "{{ registry_host }}/k8s"
+yum_repo: "https://yum.corp.local"</pre>
+</section>
+
+<section id="coreos">
+  <h2><span class="tag all">all</span> coreos.yml</h2>
+  <div class="file-path">group_vars/all/coreos.yml</div>
+  <p><code>coreos_auto_upgrade</code> (پیش‌فرض true) — آیا نودهای Flatcar/CoreOS به‌صورت خودکار OS را آپگرید کنند.</p>
+</section>
+
+<section id="cloud-providers">
+  <h2><span class="tag cloud">cloud</span> فایل‌های Cloud Provider</h2>
+  <p>همه زیر <code>group_vars/all/</code>. CCM را با <code>cloud_provider: external</code> و <code>external_cloud_provider</code> مناسب فعال کنید، بعد CSI را تنظیم کنید.</p>
+
+  <h3>aws.yml</h3>
+  <div class="file-path">group_vars/all/aws.yml</div>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>aws_ebs_csi_enabled</code></td><td>نصب درایور AWS EBS CSI</td></tr>
+    <tr><td><code>aws_ebs_csi_enable_volume_scheduling</code></td><td>زمان‌بندی مبتنی بر topology</td></tr>
+    <tr><td><code>aws_ebs_csi_enable_volume_snapshot</code> / <code>_resizing</code></td><td>اسنپ‌شات / گسترش حجم</td></tr>
+    <tr><td><code>aws_ebs_csi_extra_volume_tags</code></td><td>تگ AWS روی volumeها</td></tr>
+  </table>
+
+  <h3>azure.yml</h3>
+  <p>نیاز به Azure AD و شناسه‌های شبکه: <code>azure_tenant_id</code>، <code>azure_subscription_id</code>، <code>azure_aad_client_id/secret</code>، Resource Group، VNet/subnet/NSG. برای Disk CSI متغیرهای <code>azure_csi_*</code> و <code>azure_csi_enabled: true</code>.</p>
+
+  <h3>gcp.yml</h3>
+  <p><code>gcp_pd_csi_enabled</code> به‌همراه مسیر JSON سرویس‌اکانت (<code>gcp_pd_csi_sa_cred_file</code>).</p>
+
+  <h3>openstack.yml</h3>
+  <ul>
+    <li>LBaaS قدیمی: <code>openstack_lbaas_*</code></li>
+    <li>CCM خارجی: <code>external_openstack_lbaas_*</code>، شبکه‌ها، application credential</li>
+    <li>Cinder CSI: <code>cinder_csi_enabled</code>، تگ image، <code>storage_classes</code></li>
+  </ul>
+
+  <h3>vsphere.yml</h3>
+  <p>آدرس vCenter، کاربر/رمز، datacenter، cluster id؛ <code>vsphere_csi_enabled</code>.</p>
+
+  <h3>oci.yml</h3>
+  <p>احراز هویت Oracle (tenancy، user، key یا instance principals)، VCN/subnet، rate limit، security list.</p>
+
+  <h3>hcloud.yml</h3>
+  <p>Hetzner: API token، پشتیبانی network، محل/زون LB، ingress خصوصی.</p>
+
+  <h3>huaweicloud.yml</h3>
+  <p>Auth URL / کلیدها (اغلب از env)، subnet/network برای LBaaS، image کنترلر.</p>
+
+  <h3>upcloud.yml</h3>
+  <p><code>upcloud_csi_enabled</code> + اعتبارنامه از env؛ اختیاریاً storage class برای maxiops/hdd.</p>
+</section>
+
+<section id="k8s-cluster">
+  <h2><span class="tag k8s">k8s</span> k8s-cluster.yml — هسته Kubernetes</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-cluster.yml</div>
+  <p>قلب تنظیمات کلاستر؛ روی همه اعضای گروه پویای <code>k8s_cluster</code> اعمال می‌شود.</p>
+
+  <h3>پوشه‌ها و مالکیت</h3>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>kube_config_dir</code></td><td><code>/etc/kubernetes</code></td><td>درخت اصلی کانفیگ</td></tr>
+    <tr><td><code>kube_cert_dir</code></td><td><code>.../ssl</code></td><td>گواهی‌ها</td></tr>
+    <tr><td><code>local_release_dir</code></td><td><code>/tmp/releases</code></td><td>کش دانلود (حدود ۱GB فضای آزاد)</td></tr>
+    <tr><td><code>kube_owner</code></td><td><code>kube</code></td><td>کاربر مالک؛ برای Cilium گاهی <code>root</code></td></tr>
+    <tr><td><code>credentials_dir</code></td><td>داخل inventory</td><td>secretهای تولیدشده روی ماشین Ansible</td></tr>
+    <tr><td><code>kube_log_level</code></td><td><code>2</code></td><td>میزان verbosity کامپوننت‌ها</td></tr>
+  </table>
+
+  <h3>احراز هویت</h3>
+  <ul>
+    <li>OIDC: <code>kube_oidc_auth</code>، URL، client_id، claimها</li>
+    <li>AuthenticationConfiguration ساخت‌یافته (JWT)</li>
+    <li>Webhook authn/authz</li>
+    <li><code>kube_api_anonymous_auth</code> و <code>remove_anonymous_access</code></li>
+  </ul>
+
+  <h3>شبکه (مهم‌ترین گزینه‌ها)</h3>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>kube_network_plugin</code></td><td><code>calico</code></td><td><code>calico</code>، <code>cilium</code>، <code>flannel</code>، <code>kube-ovn</code>، <code>cloud</code>، <code>cni</code></td></tr>
+    <tr><td><code>kube_network_plugin_multus</code></td><td><code>false</code></td><td>نصب Multus برای چند NIC</td></tr>
+    <tr><td><code>kube_service_addresses</code></td><td><code>10.233.0.0/18</code></td><td>بازه ClusterIP — نباید با LAN تداخل داشته باشد</td></tr>
+    <tr><td><code>kube_pods_subnet</code></td><td><code>10.233.64.0/18</code></td><td>بازه Pod — نباید با LAN تداخل داشته باشد</td></tr>
+    <tr><td><code>kube_network_node_prefix</code></td><td><code>24</code></td><td>ماسک per-node (با /18 حدود ۶۴ نود × ۲۵۴ پاد)</td></tr>
+    <tr><td><code>kube_proxy_mode</code></td><td><code>ipvs</code></td><td><code>ipvs</code>، <code>iptables</code> یا <code>nftables</code></td></tr>
+    <tr><td><code>kube_proxy_strict_arp</code></td><td><code>false</code></td><td>برای MetalLB / kube-vip با ARP لازم است</td></tr>
+  </table>
+  <div class="callout warn">
+    <strong>قبل از نصب CIDR را برنامه‌ریزی کنید.</strong> تغییر <code>kube_pods_subnet</code> / <code>kube_service_addresses</code> بعد از bootstrap سخت است.
+  </div>
+
+  <h3>DNS</h3>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>cluster_name</code></td><td><code>cluster.local</code></td><td>دامنه DNS کلاستر</td></tr>
+    <tr><td><code>dns_mode</code></td><td><code>coredns</code></td><td><code>coredns</code>، <code>coredns_dual</code>، <code>manual</code>، <code>none</code></td></tr>
+    <tr><td><code>enable_nodelocaldns</code></td><td><code>true</code></td><td>کش DNS محلی روی هر نود</td></tr>
+    <tr><td><code>nodelocaldns_ip</code></td><td><code>169.254.25.10</code></td><td>آدرس link-local کش</td></tr>
+    <tr><td><code>resolvconf_mode</code></td><td><code>host_resolvconf</code></td><td>نحوه مدیریت DNS میزبان</td></tr>
+  </table>
+
+  <h3>انتخاب Container Runtime</h3>
+<pre>container_manager: containerd   # docker | crio | containerd
+kata_containers_enabled: false
+k8s_image_pull_policy: IfNotPresent</pre>
+
+  <h3>امنیت و منابع kubelet</h3>
+  <ul>
+    <li><code>kube_encrypt_secret_data</code> — رمزنگاری Secret در etcd</li>
+    <li><code>kubernetes_audit</code> — لاگ audit API</li>
+    <li><code>kube_reserved</code> / <code>system_reserved</code> و رزرو CPU/حافظه/PID</li>
+    <li><code>eviction_hard</code> — آستانه eviction</li>
+    <li><code>tls_min_version</code> / <code>tls_cipher_suites</code></li>
+    <li><code>auto_renew_certificates</code> — تمدید ماهانه گواهی control plane</li>
+    <li><code>kubeadm_patches</code> — پچ strategic/json/merge روی static podها</li>
+  </ul>
+
+  <h3>Storage و GPU</h3>
+  <ul>
+    <li><code>persistent_volumes_enabled</code> — ساخت StorageClass ابری</li>
+    <li><code>volume_cross_zone_attachment</code> — رفع NoVolumeZoneConflict در OpenStack</li>
+    <li><code>nvidia_accelerator_enabled</code>، <code>nvidia_gpu_nodes</code></li>
+  </ul>
+
+  <h3>آرتیفکت روی ماشین Ansible</h3>
+<pre>kubeconfig_localhost: true
+kubectl_localhost: true</pre>
+</section>
+
+<section id="addons">
+  <h2><span class="tag k8s">k8s</span> addons.yml — کامپوننت‌های اختیاری</h2>
+  <div class="file-path">group_vars/k8s_cluster/addons.yml</div>
+  <p>پرچم‌های ویژگی برای add-onهای رایج. اکثرشان پیش‌فرض <code>false</code> هستند — فقط آنچه لازم است روشن کنید.</p>
+  <div class="grid-2">
+    <div class="card"><h4>helm_enabled</h4><p>نصب Helm روی control plane.</p></div>
+    <div class="card"><h4>registry_enabled</h4><p>رجیستری درون‌کلاستری با PVC.</p></div>
+    <div class="card"><h4>metrics_server_enabled</h4><p>Metrics Server برای <code>kubectl top</code> و HPA.</p></div>
+    <div class="card"><h4>local_path_provisioner_enabled</h4><p>PV پویا روی دیسک نود (Rancher).</p></div>
+    <div class="card"><h4>local_volume_provisioner_enabled</h4><p>کشف دیسک محلی استاتیک.</p></div>
+    <div class="card"><h4>gateway_api_enabled</h4><p>نصب CRDهای Gateway API.</p></div>
+    <div class="card"><h4>ingress_alb_enabled</h4><p>کنترلر ALB اینگرس در AWS.</p></div>
+    <div class="card"><h4>cert_manager_enabled</h4><p>صدور خودکار گواهی TLS.</p></div>
+    <div class="card"><h4>metallb_enabled</h4><p>IP نوع LoadBalancer روی bare-metal (L2/BGP).</p></div>
+    <div class="card"><h4>argocd_enabled</h4><p>Argo CD برای GitOps.</p></div>
+    <div class="card"><h4>kube_vip_enabled</h4><p>VIP برای control plane و/یا Serviceها.</p></div>
+    <div class="card"><h4>node_feature_discovery_enabled</h4><p>برچسب ویژگی سخت‌افزار (مثل GPU).</p></div>
+  </div>
+  <h3>حداقل MetalLB</h3>
+<pre>metallb_enabled: true
+kube_proxy_strict_arp: true   # در k8s-cluster.yml
+metallb_config:
+  address_pools:
+    primary:
+      ip_range: ["10.5.0.0/16"]
+      auto_assign: true
+  layer2: ["primary"]</pre>
+  <h3>حداقل kube-vip</h3>
+<pre>kube_vip_enabled: true
+kube_vip_arp_enabled: true
+kube_vip_controlplane_enabled: true
+kube_vip_address: 192.168.56.120
+loadbalancer_apiserver:
+  address: "{{ kube_vip_address }}"
+  port: 6443</pre>
+</section>
+
+<section id="cni-overview">
+  <h2><span class="tag cni">CNI</span> نمای کلی فایل‌های شبکه</h2>
+  <p>در <code>k8s-cluster.yml</code> مقدار <code>kube_network_plugin</code> را بگذارید، سپس فایل <code>k8s-net-*.yml</code> متناظر را تنظیم کنید. فایل‌های CNI استفاده‌نشده ضرری ندارند.</p>
+  <table>
+    <tr><th>پلاگین</th><th>فایل</th><th>مناسب برای</th></tr>
+    <tr><td>Calico</td><td><code>k8s-net-calico.yml</code></td><td>پیش‌فرض؛ NetworkPolicy؛ BGP/VXLAN</td></tr>
+    <tr><td>Cilium</td><td><code>k8s-net-cilium.yml</code></td><td>eBPF، observability، جایگزینی kube-proxy</td></tr>
+    <tr><td>Flannel</td><td><code>k8s-net-flannel.yml</code></td><td>overlay ساده / آزمایشگاه</td></tr>
+    <tr><td>Kube-OVN</td><td><code>k8s-net-kube-ovn.yml</code></td><td>شبکه شبیه VPC با OVN</td></tr>
+    <tr><td>Kube-Router</td><td><code>k8s-net-kube-router.yml</code></td><td>BGP + IPVS + NetworkPolicy</td></tr>
+    <tr><td>Macvlan</td><td><code>k8s-net-macvlan.yml</code></td><td>Pod روی شبکه L2 فیزیکی</td></tr>
+    <tr><td>Custom</td><td><code>k8s-net-custom-cni.yml</code></td><td>manifest یا Helm خودتان</td></tr>
+  </table>
+</section>
+
+<section id="calico">
+  <h2><span class="tag cni">CNI</span> k8s-net-calico.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-calico.yml</div>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>calico_network_backend</code></td><td><code>bird</code> (BGP)، <code>vxlan</code> یا <code>none</code></td></tr>
+    <tr><td><code>calico_ipip_mode</code> / <code>calico_vxlan_mode</code></td><td><code>Always</code> / <code>CrossSubnet</code> / <code>Never</code></td></tr>
+    <tr><td><code>calico_pool_blocksize</code></td><td>اندازه بلوک IPAM (پیش‌فرض ۲۶)</td></tr>
+    <tr><td><code>calico_datastore</code></td><td><code>kdd</code> یا <code>etcd</code></td></tr>
+    <tr><td><code>typha_enabled</code></td><td>مقیاس‌پذیری در کلاستر بزرگ (با KDD)</td></tr>
+    <tr><td><code>calico_bpf_enabled</code></td><td>dataplane مبتنی بر eBPF</td></tr>
+    <tr><td><code>calico_wireguard_enabled</code></td><td>رمزنگاری WireGuard</td></tr>
+    <tr><td><code>peer_with_router</code></td><td>BGP با روتر ToR؛ mesh کامل نودها خاموش می‌شود</td></tr>
+    <tr><td><code>calico_mtu</code> / <code>calico_veth_mtu</code></td><td>تنظیم MTU برای encapsulation</td></tr>
+    <tr><td><code>calico_ip_auto_method</code></td><td>تشخیص خودکار اینترفیس</td></tr>
+  </table>
+</section>
+
+<section id="cilium">
+  <h2><span class="tag cni">CNI</span> k8s-net-cilium.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-cilium.yml</div>
+  <p>فایلی بزرگ (~۳۹۰ خط). نکات مهم:</p>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>cilium_tunnel_mode</code></td><td>overlay: <code>vxlan</code> / <code>geneve</code> یا غیرفعال برای native routing</td></tr>
+    <tr><td><code>cilium_kube_proxy_replacement</code></td><td>جایگزینی kube-proxy با eBPF</td></tr>
+    <tr><td><code>cilium_loadbalancer_mode</code></td><td><code>snat</code>، <code>dsr</code>، <code>hybrid</code></td></tr>
+    <tr><td><code>cilium_encryption_enabled</code> + type</td><td><code>ipsec</code> یا <code>wireguard</code></td></tr>
+    <tr><td><code>cilium_l2announcements</code></td><td>اعلان L2 برای Service (شبیه MetalLB)</td></tr>
+    <tr><td><code>cilium_auto_direct_node_routes</code></td><td>مسیریابی native وقتی نودها L2 مشترک دارند</td></tr>
+    <tr><td><code>cilium_enable_hubble</code></td><td>observability با Hubble</td></tr>
+    <tr><td><code>cilium_enable_host_firewall</code></td><td>سیاست شبکه روی خود host</td></tr>
+    <tr><td><code>cilium_deploy_additionally</code></td><td>نصب کنار CNI دیگر</td></tr>
+  </table>
+  <div class="callout">
+    <strong>نکته:</strong> برای بعضی حالت‌های agent، مستندات Cilium مقدار <code>kube_owner: root</code> را پیشنهاد می‌کنند.
+  </div>
+</section>
+
+<section id="flannel">
+  <h2><span class="tag cni">CNI</span> k8s-net-flannel.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-flannel.yml</div>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>flannel_interface</code></td><td>اجبار نام اینترفیس</td></tr>
+    <tr><td><code>flannel_interface_regexp</code></td><td>انتخاب اینترفیس با regex روی IP/نام</td></tr>
+    <tr><td><code>flannel_backend_type</code></td><td><code>vxlan</code>، <code>host-gw</code>، <code>wireguard</code></td></tr>
+    <tr><td><code>flannel_vxlan_vni</code> / <code>port</code></td><td>شناسه‌های VXLAN</td></tr>
+  </table>
+</section>
+
+<section id="kube-ovn">
+  <h2><span class="tag cni">CNI</span> k8s-net-kube-ovn.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-kube-ovn.yml</div>
+  <table>
+    <tr><th>متغیر</th><th>پیش‌فرض</th><th>توضیح</th></tr>
+    <tr><td><code>kube_ovn_network_type</code></td><td><code>geneve</code></td><td><code>geneve</code> یا <code>vlan</code></td></tr>
+    <tr><td><code>kube_ovn_tunnel_type</code></td><td><code>geneve</code></td><td><code>geneve</code>، <code>vxlan</code>، <code>stt</code></td></tr>
+    <tr><td><code>kube_ovn_hw_offload</code></td><td><code>false</code></td><td>آفلود سخت‌افزاری NIC</td></tr>
+    <tr><td><code>kube_ovn_enable_lb</code> / <code>_np</code></td><td><code>true</code></td><td>LB و NetworkPolicy در OVN</td></tr>
+    <tr><td><code>kube_ovn_enable_ssl</code></td><td><code>false</code></td><td>TLS برای OVN DB</td></tr>
+    <tr><td><code>kube_ovn_dpdk_enabled</code></td><td><code>false</code></td><td>مسیر داده DPDK</td></tr>
+    <tr><td><code>kube_ovn_ic_enable</code></td><td><code>false</code></td><td>اتصال به IC DB خارجی</td></tr>
+  </table>
+</section>
+
+<section id="kube-router">
+  <h2><span class="tag cni">CNI</span> k8s-net-kube-router.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-kube-router.yml</div>
+  <table>
+    <tr><th>متغیر</th><th>توضیح</th></tr>
+    <tr><td><code>kube_router_run_router</code></td><td>مسیریابی Pod با iBGP</td></tr>
+    <tr><td><code>kube_router_run_firewall</code></td><td>NetworkPolicy با iptables</td></tr>
+    <tr><td><code>kube_router_run_service_proxy</code></td><td>پروکسی Service با IPVS</td></tr>
+    <tr><td><code>kube_router_advertise_*</code></td><td>اعلان Cluster/External/LB IP به peerهای BGP</td></tr>
+    <tr><td><code>kube_router_peer_router_*</code></td><td>ASN/IP/پورت روتر خارجی</td></tr>
+    <tr><td><code>kube_router_enable_metrics</code></td><td>متریک Prometheus روی پورت ۹۲۵۵</td></tr>
+  </table>
+</section>
+
+<section id="macvlan">
+  <h2><span class="tag cni">CNI</span> k8s-net-macvlan.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-macvlan.yml</div>
+  <p><code>macvlan_interface</code> (پیش‌فرض <code>eth1</code>) — NIC والد L2. <code>enable_nat_default_gateway</code> — NAT از طریق اینترفیس gateway پیش‌فرض.</p>
+</section>
+
+<section id="custom-cni">
+  <h2><span class="tag cni">CNI</span> k8s-net-custom-cni.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-custom-cni.yml</div>
+  <p><code>kube_network_plugin: cni</code> بگذارید، سپس یکی از دو روش:</p>
+  <h3>گزینه ۱ — Manifest استاتیک</h3>
+<pre>custom_cni_manifests:
+  - "{{ playbook_dir }}/../path/to/cni.yaml"
+custom_cni_namespace: "kube-system"</pre>
+  <h3>گزینه ۲ — Helm chart</h3>
+<pre>custom_cni_chart_release_name: cilium
+custom_cni_chart_repository_url: https://helm.cilium.io
+custom_cni_chart_ref: cilium/cilium
+custom_cni_chart_version: "1.14.3"
+custom_cni_chart_values:
+  cluster:
+    name: "cilium-demo"</pre>
+</section>
+
+<section id="kube-control-plane">
+  <h2><span class="tag cp">CP</span> kube_control_plane.yml</h2>
+  <div class="file-path">group_vars/kube_control_plane.yml</div>
+  <p>فقط روی hostهای control plane، رزرو منابع را override می‌کند (معمولاً بیشتر از worker):</p>
+  <ul>
+    <li><code>kube_memory_reserved</code>، <code>kube_cpu_reserved</code>، <code>kube_ephemeral_storage_reserved</code>، <code>kube_pid_reserved</code></li>
+    <li><code>system_memory_reserved</code>، <code>system_cpu_reserved</code>، …</li>
+  </ul>
+  <p>API server (و etcd در صورت colocated) را در برابر فشار Pod محافظت می‌کند.</p>
+</section>
+
+<section id="workflow">
+  <h2>۵. روند پیشنهادی پیکربندی</h2>
+  <ol>
+    <li>کپی <code>inventory/sample</code> → <code>inventory/mycluster</code></li>
+    <li>ویرایش hostها و گروه‌ها</li>
+    <li>در <code>all/all.yml</code>: پروکسی، NTP، LB/VIP، <code>cloud_provider</code></li>
+    <li>در <code>k8s-cluster.yml</code>: CIDRها، انتخاب CNI، <code>container_manager</code>، DNS</li>
+    <li>تنظیم <code>k8s-net-*.yml</code> متناظر</li>
+    <li>فعال‌سازی add-onها در <code>addons.yml</code></li>
+    <li>اگر آفلاین هستید: <code>offline.yml</code></li>
+    <li>اگر cloud هستید: فایل ابری + فلگ CSI</li>
+    <li>اجرا: <code>ansible-playbook -i inventory/mycluster/hosts.yaml cluster.yml</code></li>
+  </ol>
+<pre># نمونه حداقلی on-prem
+# k8s-cluster.yml
+kube_network_plugin: calico
+container_manager: containerd
+kube_pods_subnet: 10.244.0.0/16
+kube_service_addresses: 10.96.0.0/12
+
+# addons.yml
+metrics_server_enabled: true
+metallb_enabled: true</pre>
+</section>
+
+<section id="cheatsheet">
+  <h2>۶. چیت‌شیت سریع</h2>
+  <table>
+    <tr><th>می‌خواهم…</th><th>ویرایش کنم…</th></tr>
+    <tr><td>CNI را عوض کنم</td><td><code>kube_network_plugin</code> + فایل net متناظر</td></tr>
+    <tr><td>Runtime را عوض کنم</td><td><code>container_manager</code> + YAML مربوطه</td></tr>
+    <tr><td>رجیستری خصوصی / آفلاین</td><td><code>offline.yml</code> (+ mirror در containerd)</td></tr>
+    <tr><td>VIP برای API روی bare-metal</td><td>kube-vip در addons یا LB در all.yml</td></tr>
+    <tr><td>LoadBalancer روی bare-metal</td><td>MetalLB + <code>kube_proxy_strict_arp</code></td></tr>
+    <tr><td>ورود OIDC</td><td><code>kube_oidc_*</code> در k8s-cluster.yml</td></tr>
+    <tr><td>دیسک ابری</td><td>فلگ CSI در فایل cloud متناظر</td></tr>
+    <tr><td>سخت‌سازی control plane</td><td>رزرو در kube_control_plane.yml + audit/encryption</td></tr>
+  </table>
+  <div class="callout ok">
+    <strong>مرجع بالادستی:</strong> همیشه با <code>inventory/sample/group_vars</code> نسخه Kubespray خودتان مقایسه کنید — نام متغیرها بین نسخه‌ها عوض می‌شود.
+  </div>
+</section>
+
+  <footer>بر اساس kubernetes-sigs/kubespray inventory/sample/group_vars (master). مستند آموزشی — قبل از استفاده production با نسخه نصب‌شده خودتان تطبیق دهید.</footer>
+</main>
+</div>
+</body>
+</html>
