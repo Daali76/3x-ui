@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubespray group_vars — Complete Educational Guide</title>
+<style>
+
+:root {
+  --bg: #0f1419;
+  --bg-elevated: #1a2332;
+  --bg-card: #1e2a3a;
+  --bg-code: #0d1117;
+  --border: #2d3a4d;
+  --text: #e6edf3;
+  --text-muted: #8b9cb3;
+  --accent: #3d9cf0;
+  --accent-soft: rgba(61, 156, 240, 0.15);
+  --success: #3fb950;
+  --warning: #d29922;
+  --danger: #f85149;
+  --tag-all: #58a6ff;
+  --tag-k8s: #a371f7;
+  --tag-cni: #3fb950;
+  --tag-cloud: #f0883e;
+  --radius: 10px;
+  --font: "Segoe UI", "Tahoma", "Noto Sans", system-ui, sans-serif;
+  --mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  --sidebar-w: 280px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: linear-gradient(160deg, #0b1220 0%, #121a28 40%, #0f1620 100%);
+  color: var(--text);
+  line-height: 1.65;
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  position: sticky; top: 0; height: 100vh; width: var(--sidebar-w);
+  background: rgba(15, 20, 25, 0.95); border-inline-end: 1px solid var(--border);
+  overflow-y: auto; padding: 1.25rem 1rem; flex-shrink: 0; backdrop-filter: blur(8px);
+}
+.sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin: 1.25rem 0 0.5rem; padding-inline-start: 0.5rem; }
+.sidebar h2:first-child { margin-top: 0.25rem; }
+.sidebar a {
+  display: block; padding: 0.35rem 0.6rem; border-radius: 6px; color: var(--text);
+  font-size: 0.88rem; text-decoration: none; margin-bottom: 2px;
+}
+.sidebar a:hover, .sidebar a.active { background: var(--accent-soft); color: var(--accent); text-decoration: none; }
+.brand {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem;
+  margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+}
+.brand-mark {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: linear-gradient(135deg, #326ce5, #3d9cf0);
+  display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; color: white;
+}
+.brand strong { display: block; font-size: 0.95rem; }
+.brand span { font-size: 0.75rem; color: var(--text-muted); }
+.main { flex: 1; max-width: 960px; padding: 2rem 2.5rem 4rem; }
+.hero {
+  background: linear-gradient(135deg, rgba(50,108,229,0.2), rgba(61,156,240,0.08));
+  border: 1px solid var(--border); border-radius: 16px; padding: 2rem 2.25rem;
+  margin-bottom: 2.5rem; position: relative; overflow: hidden;
+}
+.hero::after {
+  content: ""; position: absolute; inset: auto -20% -40% auto; width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(61,156,240,0.25), transparent 70%);
+  pointer-events: none;
+}
+.hero h1 { font-size: 1.85rem; margin-bottom: 0.6rem; line-height: 1.3; }
+.hero p { color: var(--text-muted); max-width: 62ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.1rem; }
+.badge {
+  font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 999px;
+  background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-muted);
+}
+section {
+  margin-bottom: 2.75rem; scroll-margin-top: 1.5rem;
+}
+section > h2 {
+  font-size: 1.45rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.6rem;
+}
+section > h3 { font-size: 1.1rem; margin: 1.4rem 0 0.55rem; color: #c9d7e8; }
+section > h4 { font-size: 0.98rem; margin: 1.1rem 0 0.4rem; color: var(--accent); }
+p { margin-bottom: 0.85rem; color: #c8d4e3; }
+ul, ol { margin: 0 0 1rem 1.25rem; color: #c8d4e3; }
+li { margin-bottom: 0.35rem; }
+.file-path {
+  display: inline-block; font-family: var(--mono); font-size: 0.82rem;
+  background: var(--bg-code); border: 1px solid var(--border); padding: 0.2rem 0.55rem;
+  border-radius: 6px; color: #7ee787; margin-bottom: 0.75rem;
+}
+.tag {
+  font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem; border-radius: 4px; color: #0d1117;
+}
+.tag.all { background: var(--tag-all); }
+.tag.k8s { background: var(--tag-k8s); color: white; }
+.tag.cni { background: var(--tag-cni); }
+.tag.cloud { background: var(--tag-cloud); }
+.tag.cp { background: #f778ba; }
+.callout {
+  border-inline-start: 3px solid var(--accent); background: var(--accent-soft);
+  padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+}
+.callout.warn { border-color: var(--warning); background: rgba(210,153,34,0.12); }
+.callout.ok { border-color: var(--success); background: rgba(63,185,80,0.12); }
+.callout strong { color: var(--text); }
+table {
+  width: 100%; border-collapse: collapse; margin: 0.85rem 0 1.25rem;
+  font-size: 0.9rem; background: var(--bg-elevated); border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--border);
+}
+th, td { padding: 0.65rem 0.8rem; text-align: start; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: #243044; color: #9ecbff; font-weight: 600; font-size: 0.8rem; }
+td code, p code, li code {
+  font-family: var(--mono); font-size: 0.82em; background: var(--bg-code);
+  padding: 0.1rem 0.35rem; border-radius: 4px; color: #ff7b72;
+}
+pre {
+  background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1rem 1.1rem; overflow-x: auto; margin: 0.85rem 0 1.2rem; font-family: var(--mono);
+  font-size: 0.82rem; line-height: 1.55; color: #d0d7de;
+}
+.tree {
+  font-family: var(--mono); font-size: 0.82rem; background: var(--bg-code);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem;
+  white-space: pre; overflow-x: auto; color: #7ee787; margin: 1rem 0;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+.card h4 { margin: 0 0 0.4rem; color: var(--text); }
+.card p { margin: 0; font-size: 0.9rem; }
+.toc-mobile { display: none; }
+.lang-switch {
+  margin-top: 0.75rem; font-size: 0.8rem;
+}
+.lang-switch a {
+  display: inline-block; padding: 0.35rem 0.7rem; border: 1px solid var(--border);
+  border-radius: 6px; margin-top: 0.35rem;
+}
+footer {
+  margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  color: var(--text-muted); font-size: 0.85rem;
+}
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar { position: relative; height: auto; width: 100%; max-height: 280px; }
+  .main { padding: 1.25rem 1rem 3rem; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.4rem; }
+}
+[dir="rtl"] .callout { border-radius: 8px 0 0 8px; }
+[dir="rtl"] .sidebar { border-inline-end: none; border-inline-start: 1px solid var(--border); }
+
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">KS</div>
+    <div>
+      <strong>Kubespray</strong>
+      <span>group_vars complete guide</span>
+    </div>
+  </div>
+  <div class="lang-switch"><a href="kubespray-group-vars-fa.html">نسخه فارسی</a></div>
+  
+<h2>Basics</h2>
+<a href="#intro">Introduction</a>
+<a href="#architecture">Inventory Architecture</a>
+<a href="#precedence">Variable Precedence</a>
+<a href="#structure">Directory Structure</a>
+<h2>group_vars/all</h2>
+<a href="#all-yml">all.yml</a>
+<a href="#containerd">containerd.yml</a>
+<a href="#docker">docker.yml</a>
+<a href="#crio">cri-o.yml</a>
+<a href="#etcd">etcd.yml</a>
+<a href="#offline">offline.yml</a>
+<a href="#coreos">coreos.yml</a>
+<a href="#cloud-providers">Cloud Providers</a>
+<h2>group_vars/k8s_cluster</h2>
+<a href="#k8s-cluster">k8s-cluster.yml</a>
+<a href="#addons">addons.yml</a>
+<a href="#cni-overview">CNI Overview</a>
+<a href="#calico">Calico</a>
+<a href="#cilium">Cilium</a>
+<a href="#flannel">Flannel</a>
+<a href="#kube-ovn">Kube-OVN</a>
+<a href="#kube-router">Kube-Router</a>
+<a href="#macvlan">Macvlan</a>
+<a href="#custom-cni">Custom CNI</a>
+<h2>Other</h2>
+<a href="#kube-control-plane">kube_control_plane.yml</a>
+<a href="#workflow">Recommended Workflow</a>
+<a href="#cheatsheet">Cheatsheet</a>
+
+</aside>
+<main class="main">
+  <header class="hero">
+    <h1>Kubespray group_vars — Complete Educational Guide</h1>
+    <p>A module-by-module walkthrough of every file under inventory/sample/group_vars: what it controls, key variables, defaults, and when to change them for production Kubernetes clusters.</p>
+    <div class="meta"><span class="badge">Kubespray</span><span class="badge">Ansible group_vars</span><span class="badge">Educational</span><span class="badge">EN</span></div>
+  </header>
+  
+<section id="intro">
+  <h2>1. Introduction</h2>
+  <p><strong>Kubespray</strong> is an Ansible-based toolkit for deploying production-ready Kubernetes clusters. Almost every behavioral switch lives in Ansible variables. The primary place you customize those variables is <code>inventory/&lt;cluster&gt;/group_vars/</code>.</p>
+  <p>This guide walks through <em>every</em> sample <code>group_vars</code> file shipped by upstream Kubespray (<code>inventory/sample/group_vars</code>), explaining purpose, important modules/variables, defaults, and when to change them.</p>
+  <div class="callout">
+    <strong>Learning goal:</strong> After this document you should be able to open any file under <code>group_vars</code>, know which hosts it affects, and tune the right knobs for networking, runtime, cloud, offline installs, and add-ons.
+  </div>
+</section>
+
+<section id="architecture">
+  <h2>2. Inventory Architecture</h2>
+  <p>Kubespray inventory groups:</p>
+  <table>
+    <tr><th>Group</th><th>Role</th><th>Notes</th></tr>
+    <tr><td><code>kube_control_plane</code></td><td>API server, scheduler, controller-manager</td><td>Can also be in <code>kube_node</code> if schedulable</td></tr>
+    <tr><td><code>kube_node</code></td><td>Worker nodes (run pods)</td><td>May overlap with control plane</td></tr>
+    <tr><td><code>etcd</code></td><td>etcd members</td><td>Odd number (3/5) recommended</td></tr>
+    <tr><td><code>calico_rr</code></td><td>Calico route reflectors</td><td>Advanced BGP designs</td></tr>
+    <tr><td><code>bastion</code></td><td>SSH jump host</td><td>When nodes are unreachable directly</td></tr>
+    <tr><td><code>k8s_cluster</code></td><td>Dynamic union</td><td><code>kube_node ∪ kube_control_plane ∪ calico_rr</code></td></tr>
+  </table>
+  <div class="callout ok">
+    <strong>Key rule:</strong> Variables under <code>group_vars/all/</code> apply to <em>every</em> inventory host (including standalone etcd). Variables under <code>group_vars/k8s_cluster/</code> apply to Kubernetes nodes only — not to etcd hosts that sit outside <code>k8s_cluster</code>.
+  </div>
+</section>
+
+<section id="precedence">
+  <h2>3. Variable Precedence</h2>
+  <p>Kubespray expects customization mainly via inventory <code>group_vars</code>. Precedence (simplified, high wins):</p>
+  <ol>
+    <li>Extra vars (<code>ansible-playbook -e</code> / <code>-e @file.yml</code>) — always win</li>
+    <li>Inventory host_vars</li>
+    <li>Inventory group_vars (most common place to edit)</li>
+    <li>Role defaults inside Kubespray roles</li>
+  </ol>
+  <div class="callout warn">
+    <strong>Caution:</strong> Overriding internal role vars with <code>-e</code> can break unexpectedly across upgrades. Prefer documented inventory variables.
+  </div>
+</section>
+
+<section id="structure">
+  <h2>4. Directory Structure</h2>
+  <div class="tree">inventory/sample/group_vars/
+├── all/
+│   ├── all.yml              # Global: LB, DNS, proxy, NTP, cloud_provider
+│   ├── containerd.yml       # containerd runtime
+│   ├── docker.yml           # Docker runtime (legacy)
+│   ├── cri-o.yml            # CRI-O runtime
+│   ├── etcd.yml             # etcd data dir & deployment type
+│   ├── offline.yml          # Air-gapped mirrors & download URLs
+│   ├── coreos.yml           # Flatcar/CoreOS auto-upgrade
+│   ├── aws.yml              # AWS EBS CSI
+│   ├── azure.yml            # Azure CCM / Disk CSI
+│   ├── gcp.yml              # GCP PD CSI
+│   ├── openstack.yml        # OpenStack CCM / Cinder CSI
+│   ├── vsphere.yml          # vSphere CCM / CSI
+│   ├── oci.yml              # Oracle Cloud
+│   ├── hcloud.yml           # Hetzner Cloud
+│   ├── huaweicloud.yml      # Huawei Cloud
+│   └── upcloud.yml          # UpCloud CSI
+├── k8s_cluster/
+│   ├── k8s-cluster.yml      # Core Kubernetes settings
+│   ├── addons.yml           # Helm, MetalLB, cert-manager, ...
+│   ├── k8s-net-calico.yml
+│   ├── k8s-net-cilium.yml
+│   ├── k8s-net-flannel.yml
+│   ├── k8s-net-kube-ovn.yml
+│   ├── k8s-net-kube-router.yml
+│   ├── k8s-net-macvlan.yml
+│   └── k8s-net-custom-cni.yml
+└── kube_control_plane.yml   # Control-plane resource reservations</div>
+</section>
+
+<section id="all-yml">
+  <h2><span class="tag all">all</span> all.yml — Global Cluster Settings</h2>
+  <div class="file-path">group_vars/all/all.yml</div>
+  <p>Applies to every host. Covers binary paths, API load balancing, DNS, proxies, certificates, NTP, and cloud-provider selection.</p>
+
+  <h3>4.1 Paths &amp; access</h3>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>bin_dir</code></td><td><code>/usr/local/bin</code></td><td>Where kubelet, kubectl, etcdctl, etc. are installed</td></tr>
+    <tr><td><code>access_ip</code></td><td>(unset)</td><td>IP other nodes use to reach this host (critical on AWS/GCP with public/private IP split). Often set per-host in inventory</td></tr>
+    <tr><td><code>ping_access_ip</code></td><td><code>true</code></td><td>Pre-check ICMP to <code>access_ip</code>; disable if firewall blocks ping</td></tr>
+  </table>
+
+  <h3>4.2 API Server Load Balancing</h3>
+  <p>HA control planes need a stable API endpoint. Kubespray supports external LB and localhost proxy.</p>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>loadbalancer_apiserver</code></td><td>(commented)</td><td>External LB address/port map, e.g. cloud ELB</td></tr>
+    <tr><td><code>apiserver_loadbalancer_domain_name</code></td><td>(commented)</td><td>DNS name for the external LB</td></tr>
+    <tr><td><code>loadbalancer_apiserver_localhost</code></td><td>(true by default in roles)</td><td>Run nginx/haproxy on each node as local API proxy</td></tr>
+    <tr><td><code>loadbalancer_apiserver_type</code></td><td><code>nginx</code></td><td><code>nginx</code> or <code>haproxy</code></td></tr>
+    <tr><td><code>loadbalancer_apiserver_port</code></td><td><code>6443</code></td><td>Local LB listen port (keep 6443)</td></tr>
+    <tr><td><code>loadbalancer_apiserver_healthcheck_port</code></td><td><code>8081</code></td><td>Health-check port for nginx proxy</td></tr>
+  </table>
+<pre># External LB example
+apiserver_loadbalancer_domain_name: "k8s-api.example.com"
+loadbalancer_apiserver:
+  address: 203.0.113.10
+  port: 6443</pre>
+
+  <h3>4.3 DNS</h3>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>upstream_dns_servers</code></td><td>Recursive DNS for CoreDNS / host resolv (e.g. 8.8.8.8)</td></tr>
+    <tr><td><code>disable_host_nameservers</code></td><td>If true, do not inject host nameservers into late DNS config — you must define your own</td></tr>
+  </table>
+
+  <h3>4.4 Cloud provider</h3>
+  <p>After Kubernetes v1.31, in-tree providers are gone. Set:</p>
+<pre>cloud_provider: external
+external_cloud_provider: openstack   # or vsphere, oci, huaweicloud, hcloud, manual</pre>
+  <p>Then fill the matching cloud YAML under <code>group_vars/all/</code>. Use <code>manual</code> if you install CCM yourself.</p>
+
+  <h3>4.5 HTTP(S) Proxy</h3>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>http_proxy</code> / <code>https_proxy</code></td><td>Proxy for package managers and container engine</td></tr>
+    <tr><td><code>https_proxy_cert_file</code></td><td>Custom CA for TLS-intercepting proxies</td></tr>
+    <tr><td><code>no_proxy</code></td><td>Override no_proxy list (see role defaults first)</td></tr>
+    <tr><td><code>additional_no_proxy</code></td><td>Extra hosts/CIDRs to exclude</td></tr>
+    <tr><td><code>no_proxy_exclude_workers</code></td><td>If true, only CP nodes in no_proxy — avoids restarting all workers when scaling</td></tr>
+    <tr><td><code>skip_http_proxy_on_os_packages</code></td><td>Do not set proxy in yum/apt config</td></tr>
+    <tr><td><code>download_validate_certs</code></td><td>Set false only if proxy breaks TLS (checksums still verified)</td></tr>
+  </table>
+
+  <h3>4.6 Certificates, safety, downloads</h3>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>cert_management</code></td><td><code>script</code></td><td><code>script</code> = Kubespray generates certs; <code>none</code> = you provide them</td></tr>
+    <tr><td><code>ignore_assert_errors</code></td><td><code>false</code></td><td>Continue even if pre-checks fail (dangerous)</td></tr>
+    <tr><td><code>deploy_container_engine</code></td><td><code>true</code></td><td>Set false if CRI is pre-installed</td></tr>
+    <tr><td><code>download_container</code></td><td><code>true</code></td><td>Download/cache container images</td></tr>
+    <tr><td><code>unsafe_show_logs</code></td><td><code>false</code></td><td>Disables Ansible <code>no_log</code> — may leak secrets</td></tr>
+    <tr><td><code>allow_unsupported_distribution_setup</code></td><td><code>false</code></td><td>Force install on unsupported OS</td></tr>
+  </table>
+
+  <h3>4.7 RHEL subscription, sysctl, webhook auth, NTP</h3>
+  <ul>
+    <li><code>rh_subscription_*</code> — register RHEL hosts during deploy</li>
+    <li><code>sysctl_file_path</code> / <code>sysctl_ignore_unknown_keys</code> — kernel tuning file location</li>
+    <li><code>kube_webhook_token_auth</code> + URL/CA — webhook token authentication</li>
+    <li><code>ntp_enabled</code>, <code>ntp_manage_config</code>, <code>ntp_servers</code> — time sync (important for certs &amp; etcd)</li>
+  </ul>
+</section>
+
+<section id="containerd">
+  <h2><span class="tag all">all</span> containerd.yml — Default Container Runtime</h2>
+  <div class="file-path">group_vars/all/containerd.yml</div>
+  <p>Default runtime is <code>container_manager: containerd</code> (set in k8s-cluster.yml). This file tunes containerd itself.</p>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>containerd_storage_dir</code></td><td>Image/container storage root (default <code>/var/lib/containerd</code>)</td></tr>
+    <tr><td><code>containerd_state_dir</code></td><td>Runtime state (<code>/run/containerd</code>)</td></tr>
+    <tr><td><code>containerd_default_runtime</code></td><td>Usually <code>runc</code></td></tr>
+    <tr><td><code>containerd_snapshotter</code></td><td>e.g. <code>overlayfs</code>, <code>native</code></td></tr>
+    <tr><td><code>containerd_additional_runtimes</code></td><td>Extra runtimes (Kata, gVisor, …)</td></tr>
+    <tr><td><code>containerd_registries_mirrors</code></td><td>Registry mirrors with capabilities / auth headers</td></tr>
+    <tr><td><code>containerd_registry_auth</code></td><td>Username/password for private registries</td></tr>
+    <tr><td><code>containerd_debug_level</code></td><td>Log level: info, debug, …</td></tr>
+    <tr><td><code>containerd_metrics_address</code></td><td>Prometheus metrics bind address</td></tr>
+  </table>
+<pre>containerd_registries_mirrors:
+  - prefix: docker.io
+    mirrors:
+      - host: https://mirror.example.com
+        capabilities: ["pull", "resolve"]
+        skip_verify: false</pre>
+</section>
+
+<section id="docker">
+  <h2><span class="tag all">all</span> docker.yml — Docker + cri-dockerd</h2>
+  <div class="file-path">group_vars/all/docker.yml</div>
+  <p>Only relevant when <code>container_manager: docker</code>. Docker is no longer the default; prefer containerd.</p>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>docker_storage_options</code></td><td>—</td><td>Force overlay2: <code>-s overlay2</code></td></tr>
+    <tr><td><code>docker_container_storage_setup</code></td><td><code>false</code></td><td>Configure dm on CentOS/RHEL 7</td></tr>
+    <tr><td><code>docker_cgroup_driver</code></td><td><code>systemd</code></td><td>Must match kubelet</td></tr>
+    <tr><td><code>docker_daemon_graph</code></td><td><code>/var/lib/docker</code></td><td>Data root</td></tr>
+    <tr><td><code>docker_log_opts</code></td><td>50m × 5 files</td><td>Log rotation</td></tr>
+    <tr><td><code>docker_insecure_registries</code></td><td>—</td><td>HTTP / self-signed registries</td></tr>
+    <tr><td><code>docker_registry_mirrors</code></td><td>—</td><td>Pull-through mirrors</td></tr>
+    <tr><td><code>docker_options</code></td><td>—</td><td>Raw extra dockerd flags</td></tr>
+  </table>
+</section>
+
+<section id="crio">
+  <h2><span class="tag all">all</span> cri-o.yml</h2>
+  <div class="file-path">group_vars/all/cri-o.yml</div>
+  <p>Used when <code>container_manager: crio</code>.</p>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>crio_insecure_registries</code></td><td>Registries allowed without TLS verify</td></tr>
+    <tr><td><code>crio_registry_auth</code></td><td>List of registry/user/password maps</td></tr>
+  </table>
+</section>
+
+<section id="etcd">
+  <h2><span class="tag all">all</span> etcd.yml</h2>
+  <div class="file-path">group_vars/all/etcd.yml</div>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>etcd_data_dir</code></td><td><code>/var/lib/etcd</code></td><td>Persistent etcd data — put on fast disk</td></tr>
+    <tr><td><code>container_manager</code></td><td>(inherit)</td><td>Can override CRI only for etcd hosts</td></tr>
+    <tr><td><code>etcd_deployment_type</code></td><td><code>host</code></td><td><code>host</code> = binary on host; use <code>docker</code> if Docker CRI; <code>kubeadm</code> experimental stacked</td></tr>
+  </table>
+  <div class="callout warn">
+    <strong>Tip:</strong> For production, prefer dedicated etcd disks and odd member counts. Back up <code>etcd_data_dir</code> regularly.
+  </div>
+</section>
+
+<section id="offline">
+  <h2><span class="tag all">all</span> offline.yml — Air-Gapped Installs</h2>
+  <div class="file-path">group_vars/all/offline.yml</div>
+  <p>Redirects every download (images, binaries, OS packages) to private mirrors.</p>
+  <h3>Global mirrors</h3>
+  <table>
+    <tr><th>Variable</th><th>Purpose</th></tr>
+    <tr><td><code>registry_host</code></td><td>Private container registry hostname</td></tr>
+    <tr><td><code>files_repo</code></td><td>HTTP(S) file server for binaries</td></tr>
+    <tr><td><code>yum_repo</code> / <code>debian_repo</code> / <code>ubuntu_repo</code></td><td>OS package mirrors</td></tr>
+    <tr><td><code>kube_image_repo</code>, <code>gcr_image_repo</code>, <code>docker_image_repo</code>, <code>quay_image_repo</code>, <code>github_image_repo</code></td><td>Per-ecosystem image registry overrides</td></tr>
+  </table>
+  <h3>Binary URL overrides</h3>
+  <p>Either override entire domains (<code>github_url</code>, <code>dl_k8s_io_url</code>, …) or single artifacts:</p>
+  <ul>
+    <li><code>kubeadm_download_url</code>, <code>kubectl_download_url</code>, <code>kubelet_download_url</code></li>
+    <li><code>cni_download_url</code>, <code>crictl_download_url</code>, <code>etcd_download_url</code></li>
+    <li>CNI tools: <code>calicoctl_download_url</code>, <code>ciliumcli_download_url</code></li>
+    <li>Runtimes: <code>containerd_download_url</code>, <code>runc_download_url</code>, <code>crio_download_url</code>, <code>nerdctl_download_url</code></li>
+  </ul>
+<pre>registry_host: "registry.corp.local"
+files_repo: "https://files.corp.local"
+kube_image_repo: "{{ registry_host }}/k8s"
+docker_image_repo: "{{ registry_host }}"
+yum_repo: "https://yum.corp.local"</pre>
+</section>
+
+<section id="coreos">
+  <h2><span class="tag all">all</span> coreos.yml</h2>
+  <div class="file-path">group_vars/all/coreos.yml</div>
+  <p><code>coreos_auto_upgrade</code> (default true) — whether Flatcar/CoreOS nodes auto-upgrade the OS.</p>
+</section>
+
+<section id="cloud-providers">
+  <h2><span class="tag cloud">cloud</span> Cloud Provider Files</h2>
+  <p>All live under <code>group_vars/all/</code>. Enable CCM with <code>cloud_provider: external</code> + matching <code>external_cloud_provider</code>, then configure CSI as needed.</p>
+
+  <h3 id="aws">aws.yml</h3>
+  <div class="file-path">group_vars/all/aws.yml</div>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>aws_ebs_csi_enabled</code></td><td>Install AWS EBS CSI driver</td></tr>
+    <tr><td><code>aws_ebs_csi_enable_volume_scheduling</code></td><td>Topology-aware scheduling</td></tr>
+    <tr><td><code>aws_ebs_csi_enable_volume_snapshot</code> / <code>_resizing</code></td><td>Snapshot / expand features</td></tr>
+    <tr><td><code>aws_ebs_csi_controller_replicas</code></td><td>Controller HA</td></tr>
+    <tr><td><code>aws_ebs_csi_extra_volume_tags</code></td><td>AWS tags on volumes</td></tr>
+  </table>
+
+  <h3>azure.yml</h3>
+  <p>Requires Azure AD + network identifiers: <code>azure_tenant_id</code>, <code>azure_subscription_id</code>, <code>azure_aad_client_id/secret</code>, <code>azure_resource_group</code>, VNet/subnet/NSG/route table names. Separate <code>azure_csi_*</code> for Disk CSI; set <code>azure_csi_enabled: true</code>.</p>
+
+  <h3>gcp.yml</h3>
+  <p><code>gcp_pd_csi_enabled</code> + path to service-account JSON (<code>gcp_pd_csi_sa_cred_file</code>).</p>
+
+  <h3>openstack.yml</h3>
+  <ul>
+    <li>Legacy/in-tree LBaaS knobs: <code>openstack_lbaas_*</code></li>
+    <li>External CCM: <code>external_openstack_lbaas_*</code>, network lists, app credentials</li>
+    <li>Cinder CSI: <code>cinder_csi_enabled</code>, image tags, <code>storage_classes</code></li>
+  </ul>
+
+  <h3>vsphere.yml</h3>
+  <p><code>external_vsphere_vcenter_*</code>, user/password (or env), datacenter, cluster id; <code>vsphere_csi_enabled</code>.</p>
+
+  <h3>oci.yml</h3>
+  <p>Oracle CCM auth (tenancy, user, key, fingerprint or instance principals), VCN/subnets, rate limits, security list management.</p>
+
+  <h3>hcloud.yml</h3>
+  <p>Hetzner: API token, networks support, LB location/zone, private ingress options.</p>
+
+  <h3>huaweicloud.yml</h3>
+  <p>Auth URL / access keys (often from env), LBaaS subnet/network, controller image repo/tag.</p>
+
+  <h3>upcloud.yml</h3>
+  <p><code>upcloud_csi_enabled</code> + credentials via <code>UPCLOUD_USERNAME</code>/<code>UPCLOUD_PASSWORD</code>; optional storage classes (maxiops/hdd).</p>
+</section>
+
+<section id="k8s-cluster">
+  <h2><span class="tag k8s">k8s</span> k8s-cluster.yml — Core Kubernetes</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-cluster.yml</div>
+  <p>The heart of cluster configuration. Affects all hosts in the dynamic <code>k8s_cluster</code> group.</p>
+
+  <h3>Directories &amp; ownership</h3>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>kube_config_dir</code></td><td><code>/etc/kubernetes</code></td><td>Main config tree</td></tr>
+    <tr><td><code>kube_cert_dir</code></td><td><code>.../ssl</code></td><td>Certificates</td></tr>
+    <tr><td><code>kube_manifest_dir</code></td><td><code>.../manifests</code></td><td>Static pods</td></tr>
+    <tr><td><code>local_release_dir</code></td><td><code>/tmp/releases</code></td><td>Download cache (~1GB free needed)</td></tr>
+    <tr><td><code>kube_owner</code></td><td><code>kube</code></td><td>Owner user; Cilium may need <code>root</code></td></tr>
+    <tr><td><code>credentials_dir</code></td><td><code>{{ inventory_dir }}/credentials</code></td><td>Generated secrets on Ansible host</td></tr>
+    <tr><td><code>kube_log_level</code></td><td><code>2</code></td><td>Component verbosity</td></tr>
+  </table>
+
+  <h3>Authentication</h3>
+  <ul>
+    <li>OIDC: <code>kube_oidc_auth</code>, <code>kube_oidc_url</code>, <code>kube_oidc_client_id</code>, claims/prefixes</li>
+    <li>Structured AuthenticationConfiguration (JWT) via <code>kube_apiserver_use_authentication_config_file</code></li>
+    <li>Webhook authn/authz URLs</li>
+    <li><code>kube_api_anonymous_auth</code> (default true)</li>
+    <li><code>remove_anonymous_access</code> — strip kubeadm anonymous RoleBinding</li>
+  </ul>
+
+  <h3>Networking (most important knobs)</h3>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>kube_network_plugin</code></td><td><code>calico</code></td><td><code>calico</code>, <code>cilium</code>, <code>flannel</code>, <code>kube-ovn</code>, <code>cloud</code>, <code>cni</code> (custom)</td></tr>
+    <tr><td><code>kube_network_plugin_multus</code></td><td><code>false</code></td><td>Install Multus for multi-NIC pods</td></tr>
+    <tr><td><code>kube_service_addresses</code></td><td><code>10.233.0.0/18</code></td><td>Service ClusterIP CIDR — must not overlap LAN</td></tr>
+    <tr><td><code>kube_pods_subnet</code></td><td><code>10.233.64.0/18</code></td><td>Pod CIDR — must not overlap LAN</td></tr>
+    <tr><td><code>kube_network_node_prefix</code></td><td><code>24</code></td><td>Per-node pod mask (with /18 → ~64 nodes × 254 pods)</td></tr>
+    <tr><td><code>kube_service_addresses_ipv6</code> / <code>kube_pods_subnet_ipv6</code></td><td>fd85:…</td><td>IPv6 dual-stack ranges</td></tr>
+    <tr><td><code>kube_proxy_mode</code></td><td><code>ipvs</code></td><td><code>ipvs</code>, <code>iptables</code>, or <code>nftables</code></td></tr>
+    <tr><td><code>kube_proxy_strict_arp</code></td><td><code>false</code></td><td>Required for MetalLB / kube-vip ARP</td></tr>
+  </table>
+  <div class="callout warn">
+    <strong>Plan CIDRs before install.</strong> Changing <code>kube_pods_subnet</code> / <code>kube_service_addresses</code> after bootstrap is painful. Ensure no collision with datacenter networks.
+  </div>
+
+  <h3>DNS</h3>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>cluster_name</code></td><td><code>cluster.local</code></td><td>Cluster DNS domain</td></tr>
+    <tr><td><code>dns_mode</code></td><td><code>coredns</code></td><td><code>coredns</code>, <code>coredns_dual</code>, <code>manual</code>, <code>none</code></td></tr>
+    <tr><td><code>enable_nodelocaldns</code></td><td><code>true</code></td><td>NodeLocal DNSCache on each node</td></tr>
+    <tr><td><code>nodelocaldns_ip</code></td><td><code>169.254.25.10</code></td><td>Link-local cache address</td></tr>
+    <tr><td><code>resolvconf_mode</code></td><td><code>host_resolvconf</code></td><td>How host DNS is managed</td></tr>
+    <tr><td><code>enable_coredns_k8s_external</code></td><td><code>false</code></td><td>CoreDNS k8s_external plugin</td></tr>
+  </table>
+
+  <h3>Container runtime selection</h3>
+<pre>container_manager: containerd   # docker | crio | containerd
+kata_containers_enabled: false
+k8s_image_pull_policy: IfNotPresent</pre>
+
+  <h3>Security &amp; kubelet resources</h3>
+  <ul>
+    <li><code>kube_encrypt_secret_data</code> — encryption at rest for Secrets</li>
+    <li><code>kubernetes_audit</code> — API audit logging</li>
+    <li><code>kube_reserved</code> / <code>system_reserved</code> + memory/CPU/PID/ephemeral reservations</li>
+    <li><code>eviction_hard</code> — kubelet eviction thresholds</li>
+    <li><code>tls_min_version</code> / <code>tls_cipher_suites</code></li>
+    <li><code>auto_renew_certificates</code> — monthly control-plane cert renewal via systemd timer</li>
+    <li><code>kubeadm_patches</code> — strategic/json/merge patches for static pods</li>
+  </ul>
+
+  <h3>Storage &amp; GPU</h3>
+  <ul>
+    <li><code>persistent_volumes_enabled</code> — create cloud StorageClasses</li>
+    <li><code>volume_cross_zone_attachment</code> — OpenStack NoVolumeZoneConflict workaround</li>
+    <li><code>nvidia_accelerator_enabled</code>, <code>nvidia_gpu_nodes</code>, driver/plugin images</li>
+  </ul>
+
+  <h3>Local artifacts</h3>
+<pre># On the Ansible controller after deploy:
+kubeconfig_localhost: true
+kubectl_localhost: true</pre>
+</section>
+
+<section id="addons">
+  <h2><span class="tag k8s">k8s</span> addons.yml — Optional Components</h2>
+  <div class="file-path">group_vars/k8s_cluster/addons.yml</div>
+  <p>Feature flags for popular add-ons. Most default to <code>false</code> — enable only what you need.</p>
+  <div class="grid-2">
+    <div class="card"><h4>helm_enabled</h4><p>Install Helm binary/Tillerless Helm 3 on control plane.</p></div>
+    <div class="card"><h4>registry_enabled</h4><p>In-cluster Docker registry with PVC size/class.</p></div>
+    <div class="card"><h4>metrics_server_enabled</h4><p>Metrics Server for <code>kubectl top</code> / HPA.</p></div>
+    <div class="card"><h4>local_path_provisioner_enabled</h4><p>Rancher local-path dynamic PV on node disk.</p></div>
+    <div class="card"><h4>local_volume_provisioner_enabled</h4><p>Static local disk discovery under hostDir.</p></div>
+    <div class="card"><h4>gateway_api_enabled</h4><p>Install Gateway API CRDs.</p></div>
+    <div class="card"><h4>ingress_alb_enabled</h4><p>AWS ALB Ingress Controller.</p></div>
+    <div class="card"><h4>cert_manager_enabled</h4><p>cert-manager for TLS certificates (DNS01/HTTP01).</p></div>
+    <div class="card"><h4>metallb_enabled</h4><p>MetalLB for bare-metal LoadBalancer IPs (L2/BGP pools).</p></div>
+    <div class="card"><h4>argocd_enabled</h4><p>Argo CD GitOps; optional <code>argocd_admin_password</code>.</p></div>
+    <div class="card"><h4>kube_vip_enabled</h4><p>kube-vip for control-plane VIP and/or Services.</p></div>
+    <div class="card"><h4>node_feature_discovery_enabled</h4><p>NFD for hardware feature labels (e.g. GPU).</p></div>
+  </div>
+  <h3>MetalLB essentials</h3>
+<pre>metallb_enabled: true
+kube_proxy_strict_arp: true   # in k8s-cluster.yml
+metallb_config:
+  address_pools:
+    primary:
+      ip_range: ["10.5.0.0/16"]
+      auto_assign: true
+  layer2: ["primary"]</pre>
+  <h3>kube-vip essentials</h3>
+<pre>kube_vip_enabled: true
+kube_vip_arp_enabled: true
+kube_vip_controlplane_enabled: true
+kube_vip_address: 192.168.56.120
+loadbalancer_apiserver:
+  address: "{{ kube_vip_address }}"
+  port: 6443</pre>
+</section>
+
+<section id="cni-overview">
+  <h2><span class="tag cni">CNI</span> Network Plugin Files Overview</h2>
+  <p>Set <code>kube_network_plugin</code> in <code>k8s-cluster.yml</code>, then tune the matching <code>k8s-net-*.yml</code>. Unused CNI files are harmless (vars unused).</p>
+  <table>
+    <tr><th>Plugin</th><th>File</th><th>Best for</th></tr>
+    <tr><td>Calico</td><td><code>k8s-net-calico.yml</code></td><td>Default; NetworkPolicy; BGP/VXLAN</td></tr>
+    <tr><td>Cilium</td><td><code>k8s-net-cilium.yml</code></td><td>eBPF, observability, kube-proxy replacement</td></tr>
+    <tr><td>Flannel</td><td><code>k8s-net-flannel.yml</code></td><td>Simple overlay / labs</td></tr>
+    <tr><td>Kube-OVN</td><td><code>k8s-net-kube-ovn.yml</code></td><td>OVN/VPC-style networking</td></tr>
+    <tr><td>Kube-Router</td><td><code>k8s-net-kube-router.yml</code></td><td>BGP + IPVS + NetworkPolicy</td></tr>
+    <tr><td>Macvlan</td><td><code>k8s-net-macvlan.yml</code></td><td>L2 pods on physical network</td></tr>
+    <tr><td>Custom</td><td><code>k8s-net-custom-cni.yml</code></td><td>Bring your own manifests/Helm</td></tr>
+  </table>
+</section>
+
+<section id="calico">
+  <h2><span class="tag cni">CNI</span> k8s-net-calico.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-calico.yml</div>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>calico_network_backend</code></td><td><code>bird</code> (BGP), <code>vxlan</code>, or <code>none</code></td></tr>
+    <tr><td><code>calico_ipip_mode</code> / <code>calico_vxlan_mode</code></td><td><code>Always</code>, <code>CrossSubnet</code>, <code>Never</code> — mutually exclusive encapsulations</td></tr>
+    <tr><td><code>calico_pool_blocksize</code></td><td>Default 26 — IPAM block size</td></tr>
+    <tr><td><code>calico_datastore</code></td><td><code>kdd</code> (Kubernetes CRDs) or <code>etcd</code></td></tr>
+    <tr><td><code>typha_enabled</code> / <code>typha_replicas</code></td><td>Fan-out for large clusters (KDD)</td></tr>
+    <tr><td><code>calico_bpf_enabled</code></td><td>eBPF dataplane</td></tr>
+    <tr><td><code>calico_wireguard_enabled</code></td><td>WireGuard encryption</td></tr>
+    <tr><td><code>peer_with_router</code></td><td>BGP peer to ToR; disables full node mesh</td></tr>
+    <tr><td><code>calico_advertise_cluster_ips</code></td><td>Advertise Service ClusterIPs via BGP</td></tr>
+    <tr><td><code>calico_mtu</code> / <code>calico_veth_mtu</code></td><td>MTU tuning for encaps</td></tr>
+    <tr><td><code>calico_ip_auto_method</code></td><td>Interface autodetection regex / can-reach</td></tr>
+  </table>
+</section>
+
+<section id="cilium">
+  <h2><span class="tag cni">CNI</span> k8s-net-cilium.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-cilium.yml</div>
+  <p>Large file (~390 lines). Highlights:</p>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>cilium_tunnel_mode</code></td><td>Overlay: <code>vxlan</code> / <code>geneve</code> / disabled for native routing</td></tr>
+    <tr><td><code>cilium_kube_proxy_replacement</code></td><td>Replace kube-proxy with eBPF</td></tr>
+    <tr><td><code>cilium_loadbalancer_mode</code></td><td><code>snat</code>, <code>dsr</code>, <code>hybrid</code></td></tr>
+    <tr><td><code>cilium_encryption_enabled</code> + <code>cilium_encryption_type</code></td><td><code>ipsec</code> or <code>wireguard</code></td></tr>
+    <tr><td><code>cilium_l2announcements</code></td><td>L2 service announcements (MetalLB-like)</td></tr>
+    <tr><td><code>cilium_auto_direct_node_routes</code></td><td>Native routing when L2 between nodes</td></tr>
+    <tr><td><code>cilium_enable_hubble</code></td><td>Observability (Hubble UI/Relay — see file)</td></tr>
+    <tr><td><code>cilium_enable_host_firewall</code></td><td>Host network policies</td></tr>
+    <tr><td><code>cilium_identity_allocation_mode</code></td><td><code>crd</code> or <code>kvstore</code></td></tr>
+    <tr><td><code>cilium_deploy_additionally</code></td><td>Install Cilium beside another CNI (e.g. for kube-proxy replacement only)</td></tr>
+  </table>
+  <div class="callout">
+    <strong>Note:</strong> Cilium docs often recommend <code>kube_owner: root</code> for unprivileged agent setups.
+  </div>
+</section>
+
+<section id="flannel">
+  <h2><span class="tag cni">CNI</span> k8s-net-flannel.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-flannel.yml</div>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>flannel_interface</code></td><td>Force backend interface name</td></tr>
+    <tr><td><code>flannel_interface_regexp</code></td><td>Select interface by IP/name regex</td></tr>
+    <tr><td><code>flannel_backend_type</code></td><td><code>vxlan</code>, <code>host-gw</code>, <code>wireguard</code></td></tr>
+    <tr><td><code>flannel_vxlan_vni</code> / <code>port</code></td><td>VXLAN identifiers</td></tr>
+  </table>
+</section>
+
+<section id="kube-ovn">
+  <h2><span class="tag cni">CNI</span> k8s-net-kube-ovn.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-kube-ovn.yml</div>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Explanation</th></tr>
+    <tr><td><code>kube_ovn_network_type</code></td><td><code>geneve</code></td><td><code>geneve</code> or <code>vlan</code></td></tr>
+    <tr><td><code>kube_ovn_tunnel_type</code></td><td><code>geneve</code></td><td><code>geneve</code>, <code>vxlan</code>, <code>stt</code></td></tr>
+    <tr><td><code>kube_ovn_hw_offload</code></td><td><code>false</code></td><td>NIC hardware offload</td></tr>
+    <tr><td><code>kube_ovn_enable_lb</code> / <code>_np</code></td><td><code>true</code></td><td>OVN load balancer / NetworkPolicy</td></tr>
+    <tr><td><code>kube_ovn_enable_ssl</code></td><td><code>false</code></td><td>TLS for OVN DB</td></tr>
+    <tr><td><code>kube_ovn_dpdk_enabled</code></td><td><code>false</code></td><td>DPDK datapath</td></tr>
+    <tr><td><code>kube_ovn_ic_enable</code></td><td><code>false</code></td><td>Interconnection to external IC DB</td></tr>
+  </table>
+</section>
+
+<section id="kube-router">
+  <h2><span class="tag cni">CNI</span> k8s-net-kube-router.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-kube-router.yml</div>
+  <table>
+    <tr><th>Variable</th><th>Explanation</th></tr>
+    <tr><td><code>kube_router_run_router</code></td><td>iBGP pod routing</td></tr>
+    <tr><td><code>kube_router_run_firewall</code></td><td>NetworkPolicy via iptables</td></tr>
+    <tr><td><code>kube_router_run_service_proxy</code></td><td>IPVS Service proxy (see caveats)</td></tr>
+    <tr><td><code>kube_router_advertise_*</code></td><td>Advertise Cluster/External/LB IPs to BGP peers</td></tr>
+    <tr><td><code>kube_router_peer_router_*</code></td><td>External BGP peer ASN/IPs/ports</td></tr>
+    <tr><td><code>kube_router_enable_metrics</code></td><td>Prometheus metrics on :9255</td></tr>
+  </table>
+</section>
+
+<section id="macvlan">
+  <h2><span class="tag cni">CNI</span> k8s-net-macvlan.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-macvlan.yml</div>
+  <p><code>macvlan_interface</code> (default <code>eth1</code>) — parent L2 NIC. <code>enable_nat_default_gateway</code> — NAT via default gateway interface.</p>
+</section>
+
+<section id="custom-cni">
+  <h2><span class="tag cni">CNI</span> k8s-net-custom-cni.yml</h2>
+  <div class="file-path">group_vars/k8s_cluster/k8s-net-custom-cni.yml</div>
+  <p>Set <code>kube_network_plugin: cni</code>, then choose one deployment path:</p>
+  <h3>Option 1 — Static manifests</h3>
+<pre>custom_cni_manifests:
+  - "{{ playbook_dir }}/../path/to/cni.yaml"
+custom_cni_namespace: "kube-system"</pre>
+  <h3>Option 2 — Helm chart</h3>
+<pre>custom_cni_chart_release_name: cilium
+custom_cni_chart_repository_url: https://helm.cilium.io
+custom_cni_chart_ref: cilium/cilium
+custom_cni_chart_version: "1.14.3"
+custom_cni_chart_values:
+  cluster:
+    name: "cilium-demo"</pre>
+</section>
+
+<section id="kube-control-plane">
+  <h2><span class="tag cp">CP</span> kube_control_plane.yml</h2>
+  <div class="file-path">group_vars/kube_control_plane.yml</div>
+  <p>Overrides resource reservations only for control-plane hosts (higher than workers typically):</p>
+  <ul>
+    <li><code>kube_memory_reserved</code>, <code>kube_cpu_reserved</code>, <code>kube_ephemeral_storage_reserved</code>, <code>kube_pid_reserved</code></li>
+    <li><code>system_memory_reserved</code>, <code>system_cpu_reserved</code>, …</li>
+  </ul>
+  <p>Protects API server / etcd (if colocated) from pod pressure.</p>
+</section>
+
+<section id="workflow">
+  <h2>5. Recommended Configuration Workflow</h2>
+  <ol>
+    <li>Copy <code>inventory/sample</code> → <code>inventory/mycluster</code></li>
+    <li>Edit inventory hosts &amp; groups</li>
+    <li>In <code>all/all.yml</code>: proxies, NTP, external LB / VIP, <code>cloud_provider</code></li>
+    <li>In <code>k8s-cluster.yml</code>: CIDRs, CNI choice, <code>container_manager</code>, DNS</li>
+    <li>Tune matching <code>k8s-net-*.yml</code></li>
+    <li>Enable add-ons in <code>addons.yml</code></li>
+    <li>If air-gapped, fill <code>offline.yml</code></li>
+    <li>If cloud, fill the cloud YAML + CSI flags</li>
+    <li>Run <code>ansible-playbook -i inventory/mycluster/hosts.yaml cluster.yml</code></li>
+  </ol>
+<pre># Minimal on-prem example snippets
+# k8s-cluster.yml
+kube_network_plugin: calico
+container_manager: containerd
+kube_pods_subnet: 10.244.0.0/16
+kube_service_addresses: 10.96.0.0/12
+
+# addons.yml
+metrics_server_enabled: true
+metallb_enabled: true</pre>
+</section>
+
+<section id="cheatsheet">
+  <h2>6. Quick Cheatsheet</h2>
+  <table>
+    <tr><th>I want to…</th><th>Edit…</th></tr>
+    <tr><td>Change CNI</td><td><code>k8s-cluster.yml</code> → <code>kube_network_plugin</code> + matching net file</td></tr>
+    <tr><td>Change runtime</td><td><code>container_manager</code> + containerd/docker/cri-o YAML</td></tr>
+    <tr><td>Private registry / offline</td><td><code>offline.yml</code> (+ registry mirrors in containerd)</td></tr>
+    <tr><td>API VIP on bare metal</td><td><code>addons.yml</code> kube-vip <em>or</em> external LB in <code>all.yml</code></td></tr>
+    <tr><td>LoadBalancer on bare metal</td><td>MetalLB + <code>kube_proxy_strict_arp</code></td></tr>
+    <tr><td>OIDC login</td><td><code>kube_oidc_*</code> in <code>k8s-cluster.yml</code></td></tr>
+    <tr><td>Cloud disks</td><td>Matching <code>all/*.yml</code> CSI flag</td></tr>
+    <tr><td>Harden control plane</td><td><code>kube_control_plane.yml</code> reservations + audit/encryption flags</td></tr>
+  </table>
+  <div class="callout ok">
+    <strong>Upstream reference:</strong> Always compare with your Kubespray version’s <code>inventory/sample/group_vars</code> — variable names evolve between releases.
+  </div>
+</section>
+
+  <footer>Based on kubernetes-sigs/kubespray inventory/sample/group_vars (master). Educational documentation — verify against your installed Kubespray version before production use.</footer>
+</main>
+</div>
+</body>
+</html>
